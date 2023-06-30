@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/gratiw/crap-to-wp-importer#readme",
   "dependencies": {
-    "wpapi": "^1.2.2"
+    "wpapi": "^1.2.2",
+    "xml2json": "^0.12.0"
   }
 }
