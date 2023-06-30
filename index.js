@@ -1,31 +1,4 @@
-const express = require("express");
-const app = express();
-const mysql = require('mysql');
 var WPAPI = require( 'wpapi' );
- 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'secret',
-    database: 'favor'
-});
-
-connection.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL Server!');
-});
- 
-app.listen(3000, () => {
-    console.log('Server is running at port 3000');
-});
-
-function sqlQuery(queryString){
-    connection.query(queryString, (err, rows) => {
-        if (err) throw err;
-        console.log('The data from users table are: \n', rows);
-        connection.end();
-    });
-}
 
 // You must authenticate to be able to POST (create) a post
 var wp = new WPAPI({
@@ -34,8 +7,6 @@ var wp = new WPAPI({
     username: 'admin',
     password: 'secret'
 });
-
-var uriString = wp.posts().id( 1 ).embed().toString();
 
 wp.posts().create({
     // "title" and "content" are the only required properties

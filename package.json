@@ -6,12 +6,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gratiw/crap-to-wp-importer.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gratiw/crap-to-wp-importer/issues"
+  },
+  "homepage": "https://github.com/gratiw/crap-to-wp-importer#readme",
   "dependencies": {
-    "express": "^4.18.2",
-    "mysql": "^2.18.1",
     "wpapi": "^1.2.2"
   }
 }
