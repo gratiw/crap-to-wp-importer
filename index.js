@@ -12,19 +12,38 @@ var wp = new WPAPI({
 fs = require('fs');
 
 fs.readFile( './file_to_import/import.xml', function(err, data) {
-    var json = parser.toJson(data);
-    console.log("to json ->", json);
- });
+    var parsedXml = parser.toJson(data);
+    var json = JSON.parse(parsedXml);
+    var product = json.products.product;
+    var counter = 0;
 
-// wp.posts().create({
-//     // "title" and "content" are the only required properties
-//     title: 'Your Post Title',
-//     content: 'Your post content',
-//     // Post will be created as a draft by default if a specific "status"
-//     // is not specified
-//     status: 'publish'
-// }).then(function( response ) {
-//     // "response" will hold all properties of your newly-created post,
-//     // including the unique `id` the post was assigned on creation
-//     console.log( response.id );
-// });
+    product.forEach(element => {
+        counter++;
+        
+        const newProduct = {
+          title: product.title,
+          content: product.description,
+          type: 'product',
+          status: 'publish',
+          meta: {
+            sku: product.sku,
+            weight: product.weight,
+            price: product.price,
+            // Add more custom meta attributes here as needed
+            // PRZERZUCIĆ SIĘ NA WC API!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          }
+        };
+
+        wp.posts().create(newProduct)
+        .then((response) => {
+          console.log(`Product created with ID: ${response.id}`);
+        })
+        .catch((error) => {
+          console.error('Error creating product:', error);
+        }); 
+
+        console.log(element.nazwa_produktu);
+    });
+
+
+ });
