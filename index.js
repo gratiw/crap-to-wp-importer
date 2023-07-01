@@ -1,12 +1,11 @@
-var WPAPI = require( 'wpapi' );
 var parser = require('xml2json');
+const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 
-// You must authenticate to be able to POST (create) a post
-var wp = new WPAPI({
-    endpoint: 'http://favor.local/wp-json',
-    // This assumes you are using basic auth, as described further below
-    username: 'admin',
-    password: 'secret'
+const api = new WooCommerceRestApi({
+  url: "http://favor.local",
+  consumerKey: "ck_613cc14c7c22b7b0e001af56cca4b8102aeef4d8",
+  consumerSecret: "cs_1740bace17e43a82e05463df2f73f40e4d0e1f56",
+  version: "wc/v3"
 });
 
 fs = require('fs');
@@ -33,14 +32,6 @@ fs.readFile( './file_to_import/import.xml', function(err, data) {
             // PRZERZUCIĆ SIĘ NA WC API!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           }
         };
-
-        wp.posts().create(newProduct)
-        .then((response) => {
-          console.log(`Product created with ID: ${response.id}`);
-        })
-        .catch((error) => {
-          console.error('Error creating product:', error);
-        }); 
 
         console.log(element.nazwa_produktu);
     });
