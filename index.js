@@ -1,4 +1,6 @@
 const parser = require('xml2json');
+const axios = require('axios');
+const fs = require('fs');
 const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 
 const api = new WooCommerceRestApi({
@@ -18,8 +20,6 @@ function hasLettersAndCommas(value) {
   return pattern.test(value);
 }
 
-const fs = require('fs');
-
 fs.readFile('./file_to_import/import.xml', async function(err, data) {
   if (err) {
     console.error(err);
@@ -35,16 +35,23 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
     const attributeArray = [];
     let attributesIter = 0;
 
+    const productTags = [];
+
     attributesArray.forEach(item => {
       const value = item.attribute_value;
+      let tags;
 
       if (
         item.attribute_name === 'SKU' ||
         item.attribute_name === 'Produkt długość (cm)' ||
         item.attribute_name === 'Produkt szerokość (cm)' ||
         item.attribute_name === 'Produkt wysokość (cm)'
-      ) {
+      ){
         return;
+      } else if(item.attribute_name === 'Materiał' || item.attribute_name === 'Styl' || item.attribute_name === 'Przeznaczenie'){
+        const tags = value.split(", ");
+        const tagObjects = tags.map(tag => ({ name: tag }));
+        productTags.push(...tagObjects);
       }
 
       if (value === 'Nie dotyczy') {
@@ -108,27 +115,34 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
         console.log('Error:', error);
       }
     }
-
-    const productData = {
-      name: element.nazwa_produktu,
-      type: "simple",
-      regular_price: element.cena_detaliczna_brutto_pln,
-      sku: element.sku,
-      description: element.opis_dlugi_korzysci_html,
-      short_description: element.opis_krotki_html,
-      stock_quantity: element.ilosc,
-      weight: '',
-      dimensions: {
-        length: element.dlugosc,
-        width: element.szerokosc,
-        height: element.wysokosc
-      },
-      categories: productCategories,
-      images: [],
-      attributes: attributeArray
-    };
-
+    
+    const imageArray = Object.values(element).filter(value => typeof value === 'string' && value.startsWith('https://'));
+  
+    // console.log(imageArray);
+    
     try {
+
+      const productData = {
+        name: element.nazwa_produktu,
+        type: "simple",
+        regular_price: element.cena_detaliczna_brutto_pln,
+        sku: element.sku,
+        description: element.opis_dlugi_korzysci_html,
+        short_description: element.opis_krotki_html,
+        manage_stock: true,
+        stock_quantity: element.ilosc,
+        tags: productTags,
+        weight: '',
+        dimensions: {
+          length: element.dlugosc,
+          width: element.szerokosc,
+          height: element.wysokosc
+        },
+        categories: productCategories,
+        images : [],
+        attributes: attributeArray
+      };
+
       const response = await api.post("products", productData);
 
       if (response.data && response.data.id) {
