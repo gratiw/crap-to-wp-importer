@@ -210,7 +210,7 @@ fs.readFile('./file_to_import/import.xml', function(err, data) {
                 const newCategoryData = {
                   name: categoryName,
                   description: 'Category description',
-                  // Additional category properties can be added here
+                  // Additional category properties
                 };
         
                 return api.post('products/categories', newCategoryData)
