@@ -63,7 +63,7 @@ async function uploadImage(url, authHeader) {
 }
 ////////////////////////////////////////////////////////
 
-fs.readFile('./file_to_import/import-full.xml', async function(err, data) {
+fs.readFile('./file_to_import/import.xml', async function(err, data) {
   if (err) {
     console.error(err);
     return;
