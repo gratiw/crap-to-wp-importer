@@ -1,5 +1,6 @@
 const parser = require('xml2json');
 const axios = require('axios');
+const FormData = require('form-data');
 const fs = require('fs');
 const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 
@@ -20,7 +21,49 @@ function hasLettersAndCommas(value) {
   return pattern.test(value);
 }
 
-fs.readFile('./file_to_import/import.xml', async function(err, data) {
+////////////////////////////////////////////////////////
+async function uploadImagesToWordPress(imageUrls) {
+  const base64Credentials = Buffer.from('admin:secret').toString('base64');
+  const authHeader = `Basic ${base64Credentials}`;
+
+  try {
+    const imageArray = [];
+    for (const url of imageUrls) {
+      const response = await uploadImage(url, authHeader);
+      
+      if (response.status === 201) {
+        const imageId = response.data.id;
+        imageArray.push({ id: imageId });
+      }
+    }
+
+    return imageArray;
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    return [];
+  }
+}
+
+async function uploadImage(url, authHeader) {
+  const form = new FormData();
+  const imageStream = await axios.get(url, { responseType: 'stream' });
+  const filename = url.substring(url.lastIndexOf('/') + 1);
+
+  form.append('file', imageStream.data, {
+    filename: filename,
+    contentType: imageStream.headers['content-type'],
+  });
+
+  return axios.post('http://favor.local/wp-json/wp/v2/media', form, {
+    headers: {
+      ...form.getHeaders(),
+      'Authorization': authHeader,
+    },
+  });
+}
+////////////////////////////////////////////////////////
+
+fs.readFile('./file_to_import/import-full.xml', async function(err, data) {
   if (err) {
     console.error(err);
     return;
@@ -117,41 +160,40 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
     
     const imageArray = Object.values(element).filter(value => typeof value === 'string' && value.startsWith('https://'));
   
-    // console.log(imageArray);
+    // console.log(element);
     
-    try {
+    uploadImagesToWordPress(imageArray)
+      .then(imageArray => {
 
-      const productData = {
-        name: element.nazwa_produktu,
-        type: "simple",
-        regular_price: element.cena_detaliczna_brutto_pln,
-        sku: element.sku,
-        description: element.opis_dlugi_korzysci_html,
-        short_description: element.opis_krotki_html,
-        manage_stock: true,
-        stock_quantity: element.ilosc,
-        tags: productTags,
-        weight: '',
-        dimensions: {
-          length: element.dlugosc,
-          width: element.szerokosc,
-          height: element.wysokosc
-        },
-        categories: productCategories,
-        images : [],
-        attributes: attributeArray
-      };
+        console.log('Uploaded image IDs:', imageArray);
 
-      const response = await api.post("products", productData);
-
-      if (response.data && response.data.id) {
+        const productData = {
+          name: element.nazwa_produktu,
+          type: "simple",
+          regular_price: element.cena_detaliczna_brutto_pln,
+          sku: element.sku,
+          description: element.opis_dlugi_korzysci_html,
+          short_description: element.opis_krotki_html,
+          manage_stock: true,
+          stock_quantity: element.ilosc,
+          tags: productTags,
+          weight: element.waga_produktu,
+          dimensions: {
+            length: element.dlugosc,
+            width: element.szerokosc,
+            height: element.wysokosc
+          },
+          categories: productCategories,
+          images: imageArray,
+          attributes: attributeArray
+        };
+  
+        const response = api.post("products", productData);
+  
         console.log('Product created: ' + element.nazwa_produktu);
-        // console.log("Response Status:", response.status);
-        // console.log("Response Headers:", response.headers);
-        // console.log("Response Data:", response.data);
-      }
-    } catch (error) {
-      console.log("Error:", error.response.data);
-    }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
   }
 });
