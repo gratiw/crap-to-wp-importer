@@ -39,7 +39,6 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
 
     attributesArray.forEach(item => {
       const value = item.attribute_value;
-      let tags;
 
       if (
         item.attribute_name === 'SKU' ||
@@ -49,7 +48,7 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
       ){
         return;
       } else if(item.attribute_name === 'Materiał' || item.attribute_name === 'Styl' || item.attribute_name === 'Przeznaczenie'){
-        const tags = value.split(", ");
+        let tags = value.split(", ");
         const tagObjects = tags.map(tag => ({ name: tag }));
         productTags.push(...tagObjects);
       }
@@ -150,7 +149,6 @@ fs.readFile('./file_to_import/import.xml', async function(err, data) {
         // console.log("Response Status:", response.status);
         // console.log("Response Headers:", response.headers);
         // console.log("Response Data:", response.data);
-        productId = response.data.id;
       }
     } catch (error) {
       console.log("Error:", error.response.data);
